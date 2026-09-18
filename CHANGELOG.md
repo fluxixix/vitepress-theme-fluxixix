@@ -1,5 +1,22 @@
 # 更新日志
 
+## Unreleased
+
+### 文档
+
+- README 重写成"开源项目首页"的样子：站名与徽章、三张预览图（首页 / 文章页 / 归档）、
+  安装与接入、站点参数与页面形态、字体、起新站、开发与发版、设计决策（为什么扩展默认主题、
+  为什么不写 @layer、为什么 config 侧入口是 .js、为什么不发 registry）。新增 `assets/`。
+  参考了 [vuejs/core](https://github.com/vuejs/core) 这类仓库的头部组织方式，版式沿用主站 README。
+
+### 修复
+
+- 演示站首页不再同时渲染主题刊头与 VitePress 默认 `hero` / `features`——两套页头叠在一起。
+- 演示站的站点身份改走主题参数：之前不传参数，刊头与页脚写着 `fluxixix · less is more`
+  与主站仓库的链接，和导航里的 `Flux Demo` 对不上。
+- 演示站页脚去掉指向 `/feed.xml` 的链接：演示站没有挂 `rss()`，那个链接是死的。
+  现在页脚只留一个指向本仓库的链接。
+
 ## 0.3.0
 
 主题拆成独立仓库 `fluxixix/vitepress-theme-fluxixix`，并且改为**只发 GitHub**。
