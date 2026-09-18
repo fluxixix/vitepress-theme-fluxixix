@@ -45,7 +45,9 @@ jobs:
       - run: npm run verify
 
       - name: 打包
-        run: npm pack --pack-destination dist
+        run: |
+          mkdir -p dist
+          npm pack --pack-destination dist
 
       - name: 建 Release 并挂上 tgz
         env:

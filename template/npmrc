@@ -1,0 +1,10 @@
+# npm 12 起，非 registry 来源的依赖默认被拦下（allow-git / allow-remote / allow-file 默认 none）：
+#
+#   EALLOWGIT  Fetching packages of type "git" have been disabled
+#
+# 主题是从 GitHub 装的（git 依赖），所以这一行是必需的。
+# root = 只允许**根 package.json 里显式声明的** git 依赖；
+# 依赖树里别人偷偷带进来的 git 依赖仍然会被拦——这是这条配置的最小放行方式。
+#
+# 用 npm 11 及更早版本时这行会被当成未知配置（只有一条 warning），可以留着不管。
+allow-git=root

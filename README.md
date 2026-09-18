@@ -23,33 +23,54 @@
 ```jsonc
 "devDependencies": {
   "vitepress": "^2.0.0-alpha.20",
-  "vitepress-theme-fluxixix": "github:fluxixix/vitepress-theme-fluxixix#v0.3.0"
+  "vitepress-theme-fluxixix": "git+https://github.com/fluxixix/vitepress-theme-fluxixix.git#v0.3.0"
 }
 ```
 
-命令行的等价写法：
+命令行等价写法 —— **npm 12 起，非 registry 来源的依赖默认被拦下**
+（`allow-git` / `allow-remote` 默认都是 `none`），所以先装一次要显式放行：
 
 ```bash
-# 主路径：从 git 装（lockfile 会把解析到的 commit 钉住，升级就是改这个 tag）
-npm i -D github:fluxixix/vitepress-theme-fluxixix#v0.3.0
+# npm 11 及更早：不用任何 flag
+npm i -D "git+https://github.com/fluxixix/vitepress-theme-fluxixix.git#v0.3.0"
 
-# 机器上没有 git：用 Release 里挂的 tgz，每个 tag 都会产一个
-npm i -D https://github.com/fluxixix/vitepress-theme-fluxixix/releases/download/v0.3.0/vitepress-theme-fluxixix-0.3.0.tgz
+# npm 12+：git 依赖默认被拦（EALLOWGIT），加 --allow-git=root
+npm i -D --allow-git=root "git+https://github.com/fluxixix/vitepress-theme-fluxixix.git#v0.3.0"
 ```
 
+在项目根写一个 `.npmrc`，之后 `npm install` / `npm ci` 就不用每次带 flag 了
+（`root` = 只放行**根 package.json 里显式声明**的 git 依赖，依赖树里别人带进来的仍然被拦；
+npm 11 会把它当成未知配置，只有一条 warning，可以留着）：
+
+```ini
+allow-git=root
+```
+
+- **别用 `github:` 简写**：它会被解析成 `git+ssh://` 并写进 lockfile，而 CI（没有 SSH
+  私钥）与没配 SSH key 的机器都会直接失败。一律用 `git+https://…`。
+- lockfile 会把解析到的 commit 钉住，升级就是改 `#vX.Y.Z` 这个 tag。
 - 也可以写分支（`#main`），但拿到的版本会跟着上游漂，不建议写进依赖。
+- 机器上没有 git：用 Release 里挂的 tgz，那是 URL 依赖，放行的是 `allow-remote`：
+
+  ```bash
+  npm i -D --allow-remote=root "https://github.com/fluxixix/vitepress-theme-fluxixix/releases/download/v0.3.0/vitepress-theme-fluxixix-0.3.0.tgz"
+  ```
+
 - 包不产构建物，所以 git 安装**不跑 `prepare`**、不装 devDependencies，装得很快。
 - 想要主题自带的那套排版（思源宋体 + IBM Plex Mono）再装字体：
   `npm i -D @fontsource/ibm-plex-mono @fontsource/noto-serif-sc`
 
 ## 起一个新站（npx）
 
-包里带一个零依赖脚手架，把 `template/` 拷成一份能直接跑的站点：
+包里带一个零依赖脚手架，把 `template/` 拷成一份能直接跑的站点（同样要放行 git 依赖）：
 
 ```bash
-npx github:fluxixix/vitepress-theme-fluxixix init my-blog
+npx --allow-git=root git+https://github.com/fluxixix/vitepress-theme-fluxixix.git init my-blog
 cd my-blog && npm run dev
 ```
+
+生成的站点里已经带了 `.npmrc`（`allow-git=root`），所以进去之后的 `npm install`、
+`npm run dev` 都不用再写 flag。
 
 可选参数：`--name`（站名，默认取目录名）、`--tagline`、`--statement`、
 `--url`（RSS 用的绝对地址）、`--ref`（依赖钉在哪个 tag，默认本包版本）、
@@ -59,7 +80,8 @@ cd my-blog && npm run dev
 
 ```bash
 npx degit fluxixix/vitepress-theme-fluxixix/examples/native-demo my-blog
-# degit 不写 package.json 里的依赖，拷完照上面「安装」一节补上
+# degit 走 GitHub 的 tarball 下载，不经过 npm 的 git 策略；但它不写 package.json 里的依赖，
+# 拷完照上面「安装」一节补上（并补一个 .npmrc）
 ```
 
 > npx 只负责**起一个新站**，它不负责"安装主题"——主题是站点的 devDependency。
@@ -278,8 +300,10 @@ export default createContentLoader('posts/**/*.md', {
   用 `vitepress-theme-fluxixix/theme` 这个入口就不会踩到；自己拆成两次导入时顺序不能反。
 - **不要给主题样式加 @layer**：同上。仓库里有 `check:layers` 与真实渲染对比
   （`check:rendered`，在主站仓库）两道闸挡这个退化。
-- **不从 npm registry 装**：包只发 GitHub。代价是没有 registry 的版本页面与搜索，
-  版本靠 git tag + Release 表达；好处是不需要 npm 账号，安装链路只有 git 一跳。
+- **不从 npm registry 装**：包只发 GitHub。代价有三条，都写在「安装」一节里：
+  没有 registry 的版本页面与搜索；npm 12 起要用 `allow-git=root`（或 `--allow-git=root`）
+  显式放行一次；**不能用 `github:` 简写**（它会解析成 `git+ssh://` 写进 lockfile，
+  CI 直接失败）。好处是不需要 npm 账号，安装链路只有 git 一跳。
 - **config 侧入口只能是 .js**：`/site` 与 `/rss` 由站点的配置文件引入，运行时由
   Node 加载，而 Node 不对 `node_modules` 里的文件做类型剥离。往这两个入口加
   `.ts` 会让所有真实安装的站点在构建第一步失败——`scripts/check-pack-smoke.mjs`

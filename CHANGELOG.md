@@ -8,14 +8,19 @@
 
 ### 破坏性变更（安装方式）
 
-- **不再从 npm registry 装**，也不打算发布上去。改成 git tag：
+- **不再从 npm registry 装**，也不打算发布上去。改成 GitHub 的 git tag：
 
   ```jsonc
-  "vitepress-theme-fluxixix": "github:fluxixix/vitepress-theme-fluxixix#v0.3.0"
+  "vitepress-theme-fluxixix": "git+https://github.com/fluxixix/vitepress-theme-fluxixix.git#v0.3.0"
   ```
 
-  命令行等价写法 `npm i -D github:fluxixix/vitepress-theme-fluxixix#v0.3.0`；
-  没装 git 的机器用每个 tag 挂出来的 Release tgz。
+  三条实测出来的坑，安装文档里都写了：
+  1. **必须写 `git+https://…`，不能用 `github:` 简写**。简写会被解析成
+     `git+ssh://` 并写进 lockfile，CI 上没有 SSH 私钥，装到一半直接失败。
+  2. **npm 12 起非 registry 来源的依赖默认被拦**（`EALLOWGIT`，`allow-git` /
+     `allow-remote` 默认 `none`）。第一次装要带 `--allow-git=root`，或者在项目根
+     放一个 `.npmrc` 写 `allow-git=root`；用 Release 的 tgz 则要 `--allow-remote=root`。
+  3. 没装 git 的机器走每个 tag 挂出来的 Release tgz（URL 依赖）。
 - 包必须放在仓库根（npm 不支持从 git 仓库的子目录装包），所以主题从主站仓库的
   `packages/` 下搬了出来，历史用 `git subtree split` 保留。
 
@@ -37,8 +42,10 @@
 
 ### 新增
 
-- `bin/cli.js` + `template/`：零依赖脚手架，`npx github:fluxixix/vitepress-theme-fluxixix
-  init my-blog` 直接生成一份能跑的站点。
+- `bin/cli.js` + `template/`：零依赖脚手架，
+  `npx --allow-git=root git+https://github.com/fluxixix/vitepress-theme-fluxixix.git init my-blog`
+  直接生成一份能跑的站点；生成的站点里带 `.npmrc`（`allow-git=root`），
+  之后 `npm install` / `npm run dev` 不用再带 flag。
 - `LICENSE`（MIT）。
 - 仓库自带 CI 与 Release 工作流：tag `v*` 触发检查并把 tgz 挂进 Release。
 - `scripts/check-theme-layers.mjs`、`scripts/check-example-isolation.mjs` 随包走

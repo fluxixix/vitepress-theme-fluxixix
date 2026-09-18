@@ -29,10 +29,10 @@ const TEXT_EXTENSIONS = new Set(['.md', '.ts', '.mts', '.mjs', '.js', '.json', '
 const SKIP_DIRS = new Set(['node_modules', 'cache', 'dist'])
 
 /**
- * 拷贝时改回真名。npm 打包永远排除 .gitignore（npm-packlist 的固定规则），
- * 所以模板里只能叫 gitignore，装到用户目录时再改回 .gitignore。
+ * 拷贝时改回真名。npm 打包的固定规则会排除 .gitignore 与 .npmrc（后者是怕把凭据
+ * 打进包里），所以模板里它们只能叫 gitignore / npmrc，装到用户目录时再改回来。
  */
-const RENAME = { gitignore: '.gitignore' }
+const RENAME = { gitignore: '.gitignore', npmrc: '.npmrc' }
 
 const HELP = `fluxixix-theme —— vitepress-theme-fluxixix 的起站脚手架
 
@@ -51,8 +51,11 @@ const HELP = `fluxixix-theme —— vitepress-theme-fluxixix 的起站脚手架
   -v, --version       看版本
 
 例子
-  npx github:${REPO} init my-blog
-  npx github:${REPO} init my-blog --name 我的博客 --url https://example.com --no-install
+  没装过主题的机器上，第一次要放行 git 依赖（npm 12 起默认拦下，见包内 README）：
+
+  npx --allow-git=root git+https://github.com/${REPO}.git init my-blog
+  npx --allow-git=root git+https://github.com/${REPO}.git#v0.3.0 \\
+    init my-blog --name 我的博客 --url https://example.com --no-install
 `
 
 function parseArgs(argv) {
@@ -98,7 +101,9 @@ async function readPackage() {
  * 只有 git tag 能表达版本。ref 默认取本包版本，所以从 main 跑也不会写错版本。
  */
 function themeSpec(pkg, ref) {
-  return `github:${REPO}#${ref || `v${pkg.version}`}`
+  // 写成 git+https，不用 github: 简写：简写会被解析成 git+ssh，
+  // 而 CI（GitHub Actions）没有 SSH 私钥，装机时会直接失败。
+  return `git+https://github.com/${REPO}.git#${ref || `v${pkg.version}`}`
 }
 
 async function copyTemplate(from, to, values) {
