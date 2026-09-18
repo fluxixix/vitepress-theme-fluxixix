@@ -1,6 +1,6 @@
 {
   "name": "vitepress-theme-fluxixix",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "编辑部式排版的 VitePress 主题：衬线字体栈、悬浮胶囊导航、滚动揭示、阅读进度环与作品版画；样式刻意不分层，排在默认主题之后生效，不污染宿主站点。",
   "type": "module",
   "keywords": [

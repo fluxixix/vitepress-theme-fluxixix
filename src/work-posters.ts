@@ -14,6 +14,10 @@ import type { ResolvedFluxixixOptions } from './options'
  * 过渡结束后把内联高度交还给 auto，窗口缩放时卡片还能自己适应。收起的终点从
  * --fx-poster-h 读，不写第二份常量。
  *
+ * 摊开与淡入分成两个类：量高度那一趟已经把 is-open 的样式算过一遍，详情的过渡起点
+ * 会被吃掉（浏览器认为「变化前」就是终态），所以淡入挂在自己的 is-revealed 上，
+ * 等真正摊开这一帧再开。
+ *
  * dataset 挡一道重复绑定：onContentUpdated 在水合前后各跑一次，卡片可能是同一批 DOM。
  */
 export function setupWorkPosters(options: ResolvedFluxixixOptions) {
@@ -53,14 +57,14 @@ export function setupWorkPosters(options: ResolvedFluxixixOptions) {
           card.classList.remove('is-measuring', 'is-open')
           card.style.height = `${from}px`
           void card.offsetHeight
-          card.classList.add('is-open')
+          card.classList.add('is-open', 'is-revealed')
           card.style.height = `${full}px`
         } else {
           const fixed =
             parseFloat(getComputedStyle(card).getPropertyValue('--fx-poster-h')) || 33
           void card.offsetHeight
           card.style.height = `${fixed * rem}px`
-          card.classList.remove('is-open')
+          card.classList.remove('is-open', 'is-revealed')
 
           // 卡片一口气矮掉上千像素，浏览器不会替你保住参照物：视口不动的话，
           // 指头底下那个键会瞬间飞出屏幕，整页像被拽去看下面一段。

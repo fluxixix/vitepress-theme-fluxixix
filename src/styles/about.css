@@ -492,6 +492,57 @@
   margin: 1.5rem 0 0;
 }
 
+/* 详情逐条淡入上滑。动效挂在 .is-revealed 上，不是 .is-open：展开前 JS 会先加一趟
+   .is-open 去量卡面的目标高度，那一趟里展开后的样式已经被算过一遍，详情的过渡起点就
+   没了——门得等真正摊开这一帧再开（见 work-posters.ts）。
+   动的是「内容块」本身：作品卡里 .poster-more 的直接子元素就是那条 ul，于是一条条 li
+   各自落位；多段内容的卡外面多包了一层，动的就是那几块。
+   错峰按序号递增，第 5 条往后并成一档——详情最多有 8 条，一档一档排下去末尾要等太久。
+   收起时 is-revealed 和 is-open 一起摘掉，延迟回到 0，整片跟着卡面一起收回去 */
+.poster-more > p,
+.poster-more > * > * {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 0.18s var(--fx-ease),
+    transform 0.18s var(--fx-ease);
+}
+
+.work-poster.is-revealed .poster-more > p,
+.work-poster.is-revealed .poster-more > * > * {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.34s var(--fx-ease),
+    transform 0.34s var(--fx-ease);
+}
+
+.work-poster.is-revealed .poster-more > * > *:nth-child(2) {
+  transition-delay: 0.045s;
+}
+
+.work-poster.is-revealed .poster-more > * > *:nth-child(3) {
+  transition-delay: 0.09s;
+}
+
+.work-poster.is-revealed .poster-more > * > *:nth-child(4) {
+  transition-delay: 0.135s;
+}
+
+.work-poster.is-revealed .poster-more > * > *:nth-child(n + 5) {
+  transition-delay: 0.18s;
+}
+
+/* 减弱动效时不能只清过渡：隐藏态也得一并撤掉，否则详情会一直停在透明 */
+@media (prefers-reduced-motion: reduce) {
+  .poster-more > p,
+  .poster-more > * > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* 展开后版面跟着铺开：版画回到 12rem，导语也回到正文的尺度 */
 .work-poster.is-open .poster-body {
   grid-template-columns: 12rem minmax(0, 1fr);
