@@ -75,10 +75,16 @@ npm i -D --allow-git=root "git+https://github.com/fluxixix/vitepress-theme-fluxi
 ```
 
 ```ini
-# .npmrc —— root = 只放行根 package.json 里显式声明的 git 依赖；
-# 依赖树里别人偷偷带进来的 git 依赖仍然会被拦。npm 11 会把它当未知配置（一条 warning）。
-allow-git=root
+# .npmrc —— 写 all，不要写 root。root 看着更收敛（只放行根 package.json 里声明的 git 依赖），
+# 但改了 ref 之后再 install 会被它拦下：重新解析那一步 npm 走的是另一条路径，被当成
+# non-root fetch（EALLOWGIT）——装得上，升不动，只能删掉 node_modules 重装。
+# npm 12 的 allow-git 只有 none / root / all，没有按包名或 glob 放行的写法。
+# npm 11 会把它当未知配置（一条 warning）。
+allow-git=all
 ```
+
+**升级**：改 `package.json` 里的 ref，然后 `npm install` 就行，不用重装依赖树。
+（`allow-git=root` 下这一步会报 `EALLOWGIT`，所以上面写的是 `all`。）
 
 <details>
 <summary>没有 git 的机器 / 为什么不能用 <code>github:</code> 简写</summary>

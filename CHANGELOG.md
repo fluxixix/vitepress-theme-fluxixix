@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### 修复
+
+- `.npmrc` 里的 `allow-git=root` 改成 `allow-git=all`（模板、README 与生成站点的
+  `.npmrc` 一起改）。`root` 只放行根 `package.json` 里声明的 git 依赖，首次安装没问题，
+  但**改了 ref 之后再 `npm install` 会被拦下**：重新解析那一步 npm 走的是另一条路径，
+  被当成 non-root fetch，报 `EALLOWGIT`——装得上，升不动，只能删掉 `node_modules` 重装。
+  npm 12 的 `allow-git` 只有 `none` / `root` / `all`，没有按包名或 glob 放行的写法，
+  所以要让"改 ref → `npm install`"走得通只能给到 `all`。
+
 ## 0.4.0
 
 ### 新增

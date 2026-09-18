@@ -3,8 +3,17 @@
 #   EALLOWGIT  Fetching packages of type "git" have been disabled
 #
 # 主题是从 GitHub 装的（git 依赖），所以这一行是必需的。
-# root = 只允许**根 package.json 里显式声明的** git 依赖；
-# 依赖树里别人偷偷带进来的 git 依赖仍然会被拦——这是这条配置的最小放行方式。
+#
+# 写 all，不要写 root。root = 只允许**根 package.json 里显式声明的** git 依赖，看着更收敛，
+# 但改了 ref 之后再 install 会被它拦下：重新解析那一步 npm 走的是另一条路径，被当成
+# non-root fetch（EALLOWGIT）——装得上，升不动，只能删掉 node_modules 重装。
+#
+#   npm i -D --allow-git=root "…vitepress-theme-fluxixix.git#v0.3.0"   # 首次：能过
+#   # 把 #v0.3.0 改成 #v0.4.0 再 npm install：EALLOWGIT
+#
+# npm 12 的 allow-git 只有 none / root / all，没有按包名或 glob 放行的写法，
+# 想让"改 ref → npm install"这条路走得通就只能给到 all。依赖树里来自 git 的只有本主题
+# 自己（它的依赖都在 registry 上），实际放宽的范围就到这里。
 #
 # 用 npm 11 及更早版本时这行会被当成未知配置（只有一条 warning），可以留着不管。
-allow-git=root
+allow-git=all
